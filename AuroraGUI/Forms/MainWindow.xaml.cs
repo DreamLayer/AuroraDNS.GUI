@@ -73,7 +73,7 @@ namespace AuroraGUI
                     MessageBox.Show("Tips: AuroraDNS 强烈不建议您使用国产安全软件产品！");
                 if (!MyTools.IsNslookupLocDns())
                 {
-                    MessageBoxResult msgResult =
+                    var msgResult =
                         MessageBox.Show(
                             "Question: 初次启动，是否要将您的系统默认 DNS 服务器设为 AuroraDNS?"
                             , "Question", MessageBoxButton.OKCancel);
@@ -304,8 +304,10 @@ namespace AuroraGUI
 
             if (Equals(DnsSettings.ListenIp, IPAddress.IPv6Any) ||
                 Equals(DnsSettings.ListenIp, IPAddress.IPv6Loopback))
-                new TcpFwder(Equals(DnsSettings.ListenIp, IPAddress.IPv6Any) ? IPAddress.Any : IPAddress.Loopback, 53,
-                    IPAddress.IPv6Loopback, 53).Run();
+            {
+                new Fwder(Equals(DnsSettings.ListenIp, IPAddress.IPv6Any) ? IPAddress.Any : IPAddress.Loopback, 53,
+                    IPAddress.IPv6Loopback).Run();
+            }
 
             IsLog.ToolTip = IsLog.IsChecked == true ? "记录日志 : 是" : "记录日志 : 否";
             if (IsSysDns.IsChecked == true) IsSysDns.ToolTip = "已设为系统 DNS";
