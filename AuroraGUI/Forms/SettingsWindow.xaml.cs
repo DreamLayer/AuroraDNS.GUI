@@ -82,6 +82,7 @@ namespace AuroraGUI
             DnsSettings.AutoCleanLogEnable = Convert.ToBoolean(AutoClean.IsChecked);
             DnsSettings.DnsMsgEnable = Convert.ToBoolean(DNSMsg.IsChecked);
             DnsSettings.Http2Enable = Convert.ToBoolean(HTTP2Client.IsChecked);
+            DnsSettings.TtlRewrite = Convert.ToBoolean(MinimumTTL.IsChecked);
 
             if (!string.IsNullOrWhiteSpace(DoHUrlText.Text) &&
                 !string.IsNullOrWhiteSpace(SecondDoHUrlText.Text) &&
@@ -140,6 +141,8 @@ namespace AuroraGUI
                         $"\"AllowSelfSignedCert\" : {DnsSettings.AllowSelfSignedCert.ToString().ToLower()},\n" +
                         $"\"AllowAutoRedirect\" : {DnsSettings.AllowAutoRedirect.ToString().ToLower()},\n" +
                         $"\"HTTPStatusNotify\" : {DnsSettings.HTTPStatusNotify.ToString().ToLower()},\n" +
+                        $"\"TTLRewrite\" : {DnsSettings.TtlRewrite.ToString().ToLower()},\n" +
+                        $"\"TTLMinTime\" : {DnsSettings.TtlMinTime.ToString().ToLower()},\n" +
                         $"\"EnableHttp2\" : {DnsSettings.Http2Enable.ToString().ToLower()} \n" +
                         "}");
                 }

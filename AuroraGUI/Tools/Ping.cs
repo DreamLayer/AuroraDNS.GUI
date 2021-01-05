@@ -5,6 +5,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using ARSoft.Tools.Net;
+using ARSoft.Tools.Net.Dns;
 
 namespace AuroraGUI.Tools
 {
@@ -15,8 +17,8 @@ namespace AuroraGUI.Tools
             var times = new List<int>();
             for (int i = 0; i < 4; i++)
             {
-                Socket socks = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
-                    { Blocking = true, ReceiveTimeout = 1000, SendTimeout = 1000 };
+                var socks = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+                    { Blocking = true, ReceiveTimeout = 500, SendTimeout = 500 };
                 IPEndPoint point;
                 try
                 {
@@ -26,12 +28,12 @@ namespace AuroraGUI.Tools
                 {
                     point = new IPEndPoint(Dns.GetHostAddresses(ip)[0], port);
                 }
-                Stopwatch stopWatch = new Stopwatch();
+                var stopWatch = new Stopwatch();
                 stopWatch.Start();
                 try
                 {
                     var result = socks.BeginConnect(point, null, null);
-                    if (!result.AsyncWaitHandle.WaitOne(1500, true)) continue;
+                    if (!result.AsyncWaitHandle.WaitOne(500, true)) continue;
                 }
                 catch
                 {
@@ -48,8 +50,8 @@ namespace AuroraGUI.Tools
 
         public static List<int> MPing(string ipStr)
         {
-            System.Net.NetworkInformation.Ping ping = new System.Net.NetworkInformation.Ping();
-            byte[] bufferBytes = Encoding.Default.GetBytes("abcdefghijklmnopqrstuvwabcdefghi");
+            var ping = new System.Net.NetworkInformation.Ping();
+            var bufferBytes = Encoding.Default.GetBytes("abcdefghijklmnopqrstuvwabcdefghi");
 
             var times = new List<int>();
             for (int i = 0; i < 4; i++)
@@ -61,13 +63,40 @@ namespace AuroraGUI.Tools
             return times;
         }
 
-        public static List<int> Curl(string urlStr,string name)
+        public static List<int> DnsTest(string ipStr)
         {
-            var webClient = new MyCurl.MWebClient() { TimeOut = 1000 };
             var times = new List<int>();
             for (int i = 0; i < 4; i++)
             {
-                Stopwatch stopWatch = new Stopwatch();
+                var stopWatch = new Stopwatch();
+                stopWatch.Start();
+                try
+                {
+                    var msg = new DnsClient(IPAddress.Parse(ipStr), 500).Resolve(DomainName.Parse("example.com"));
+                    if (msg == null || msg.ReturnCode != ReturnCode.NoError) continue;
+                }
+                catch
+                {
+                    continue;
+                }
+
+                stopWatch.Stop();
+                var time = Convert.ToInt32(stopWatch.Elapsed.TotalMilliseconds);
+                times.Add(time);
+                Thread.Sleep(100);
+            }
+            if (times.Count == 0) times.Add(0);
+            return times;
+        }
+
+        public static List<int> Curl(string urlStr,string name)
+        {
+            var webClient = new MyCurl.MWebClient() { TimeOut = 600 };
+            var times = new List<int>();
+            var ok = true;
+            for (int i = 0; i < 4; i++)
+            {
+                var stopWatch = new Stopwatch();
                 stopWatch.Start();
                 try
                 {
@@ -75,10 +104,10 @@ namespace AuroraGUI.Tools
                 }
                 catch
                 {
-                    continue;
+                    ok = false;
                 }
                 stopWatch.Stop();
-                times.Add(Convert.ToInt32(stopWatch.Elapsed.TotalMilliseconds));
+                if (ok) times.Add(Convert.ToInt32(stopWatch.Elapsed.TotalMilliseconds));
                 Thread.Sleep(50);
             }
             if (times.Count == 0) times.Add(0);
