@@ -4,10 +4,15 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:fw="clr-namespace:SourceChord.FluentWPF;assembly=FluentWPF"
+        xmlns:tb="http://www.hardcodet.net/taskbar"
         x:Class="AuroraGUI.MainWindow"
+        
+        fw:AcrylicWindow.Enabled="True"
+        fw:AcrylicWindow.AcrylicWindowStyle="None"
 
-        Background="#C8F1F1F1"
         BorderThickness="0.1"
+        Background="#0000"
         BorderBrush="#00655B"
         WindowStartupLocation="CenterScreen"
         mc:Ignorable="d"
@@ -20,14 +25,14 @@
         Title="Aurora DNS" 
         MaxHeight="200" MaxWidth="300" MinHeight="200" MinWidth="300"
         Height="200" Width="300" Loaded="Window_Loaded"
-        StateChanged="Window_StateChanged" ResizeMode="NoResize" WindowStyle="None">
+        StateChanged="Window_StateChanged" ResizeMode="NoResize">
 
     <WindowChrome.WindowChrome>
         <WindowChrome 
             GlassFrameThickness="1"/>
     </WindowChrome.WindowChrome>
 
-    <Grid Opacity="0.85">
+    <Grid Background="#70FFFFFF">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="161*"/>
             <ColumnDefinition Width="139*"/>
@@ -130,5 +135,32 @@
             MessageQueue="{materialDesign:MessageQueue}" 
             HorizontalContentAlignment="Center" Opacity="0.95" Background="Black" Grid.ColumnSpan="2" Margin="0,0,0,40">
         </materialDesign:Snackbar>
+
+        <tb:TaskbarIcon Grid.Column="0" Visibility="Hidden"
+                        TrayMouseDoubleClick="MinimizedNormal" Name="TaskbarIcon"
+                        IconSource="/Resources/AuroraWhite.ico" >
+
+            <tb:TaskbarIcon.TrayToolTip>
+                <ToolTip Placement="Mouse" Background="#A000">
+                    <TextBlock Name="TaskbarToolTip">AuroraDNS</TextBlock>
+                </ToolTip>
+            </tb:TaskbarIcon.TrayToolTip>
+
+            <tb:TaskbarIcon.ContextMenu>
+                <ContextMenu Name="ContextMenu" FontFamily="Microsoft Yahei UI">
+                    <MenuItem Header="最小化 / 恢复" Click="MinimizedNormal"/>
+                    <MenuItem Header="查阅日志" Click="NotepadLogItem_Click"/>
+                    <Separator />
+                    <MenuItem Header="设置…" Click="SettingButton_Click"/>
+                    <MenuItem Header="关于" Click="AboutItem_OnClick"/>
+                    <MenuItem Header="检查更新…" Click="UpdateItem_OnClick"/>
+                    <Separator />
+                    <MenuItem Header="退出并重置系统 DNS" Click="ExitResetItem_Click" />
+                    <MenuItem Header="重新启动" Click="RestartItem_Click" />
+                    <MenuItem Header="退出" Click="ExitItem_Click" />
+                </ContextMenu>
+            </tb:TaskbarIcon.ContextMenu>
+        </tb:TaskbarIcon>
+
     </Grid>
 </Window>

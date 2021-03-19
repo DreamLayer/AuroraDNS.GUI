@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Runtime.Caching;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using ArashiDNS;
 using ARSoft.Tools.Net;
 using ARSoft.Tools.Net.Dns;
@@ -131,13 +130,51 @@ namespace AuroraGUI.DnsSvr
                             //Resolve
                             try
                             {
-                                (List<DnsRecordBase> resolvedDnsList, ReturnCode statusCode) = DnsSettings.DnsMsgEnable
-                                    ? ResolveOverHttpsByDnsMsg(clientAddress.ToString(),
-                                        dnsQuestion.Name.ToString(), DnsSettings.HttpsDnsUrl, DnsSettings.ProxyEnable,
-                                        DnsSettings.WProxy, dnsQuestion.RecordType)
-                                    : ResolveOverHttpsByDnsJson(clientAddress.ToString(),
-                                        dnsQuestion.Name.ToString(), DnsSettings.HttpsDnsUrl, DnsSettings.ProxyEnable,
-                                        DnsSettings.WProxy, dnsQuestion.RecordType);
+                                var resolvedDnsList = new List<DnsRecordBase>();
+                                var statusCode = ReturnCode.NoError;
+
+                                if (false)
+                                {
+                                    var t1 = Task.Run(() =>
+                                    {
+                                        (resolvedDnsList, statusCode) = DnsSettings.DnsMsgEnable
+                                            ? ResolveOverHttpsByDnsMsg(clientAddress.ToString(),
+                                                dnsQuestion.Name.ToString(), DnsSettings.HttpsDnsUrl,
+                                                DnsSettings.ProxyEnable,
+                                                DnsSettings.WProxy, dnsQuestion.RecordType)
+                                            : ResolveOverHttpsByDnsJson(clientAddress.ToString(),
+                                                dnsQuestion.Name.ToString(), DnsSettings.HttpsDnsUrl,
+                                                DnsSettings.ProxyEnable,
+                                                DnsSettings.WProxy, dnsQuestion.RecordType);
+                                    });
+
+                                    var t2 = Task.Run(() =>
+                                    {
+                                        (resolvedDnsList, statusCode) = DnsSettings.DnsMsgEnable
+                                            ? ResolveOverHttpsByDnsMsg(clientAddress.ToString(),
+                                                dnsQuestion.Name.ToString(), DnsSettings.SecondHttpsDnsUrl,
+                                                DnsSettings.ProxyEnable,
+                                                DnsSettings.WProxy, dnsQuestion.RecordType)
+                                            : ResolveOverHttpsByDnsJson(clientAddress.ToString(),
+                                                dnsQuestion.Name.ToString(), DnsSettings.SecondHttpsDnsUrl,
+                                                DnsSettings.ProxyEnable,
+                                                DnsSettings.WProxy, dnsQuestion.RecordType);
+                                    });
+
+                                    Task.WaitAny(new[] { t1, t2 }, 5000);
+                                }
+                                else
+                                {
+                                    (resolvedDnsList, statusCode) = DnsSettings.DnsMsgEnable
+                                        ? ResolveOverHttpsByDnsMsg(clientAddress.ToString(),
+                                            dnsQuestion.Name.ToString(), DnsSettings.SecondHttpsDnsUrl,
+                                            DnsSettings.ProxyEnable,
+                                            DnsSettings.WProxy, dnsQuestion.RecordType)
+                                        : ResolveOverHttpsByDnsJson(clientAddress.ToString(),
+                                            dnsQuestion.Name.ToString(), DnsSettings.SecondHttpsDnsUrl,
+                                            DnsSettings.ProxyEnable,
+                                            DnsSettings.WProxy, dnsQuestion.RecordType);
+                                }
 
                                 if (resolvedDnsList != null && resolvedDnsList.Count != 0 && statusCode == ReturnCode.NoError)
                                 {
@@ -192,8 +229,8 @@ namespace AuroraGUI.DnsSvr
                     }
 
                     if (list.Count > 0)
-                        response.AnswerRecords.Add(new TxtRecord(DomainName.Parse("ttl.auroradns.mili.one"), 600,
-                            $"Rewrite TTL to {DnsSettings.TtlMinTime}"));
+                        response.AnswerRecords.Add(new TxtRecord(DomainName.Parse("ttl.auroradns.mili.one"),
+                            DnsSettings.TtlMinTime, $"Rewrite TTL to {DnsSettings.TtlMinTime}"));
                 }
 
                 e.Response = response;
@@ -224,18 +261,18 @@ namespace AuroraGUI.DnsSvr
                 try
                 {
                     BackgroundLog($@"| - Catch WebException : {Convert.ToInt32(response.StatusCode)} {response.StatusCode} | {e.Status} | {domainName} | {response.ResponseUri}");
-                    if (DnsSettings.HTTPStatusNotify)
-                        MainWindow.NotifyIcon.ShowBalloonTip(360, "AuroraDNS - 错误",
-                            $"异常 :{Convert.ToInt32(response.StatusCode)} {response.StatusCode} {Environment.NewLine} {domainName}", ToolTipIcon.Warning);
+                    //if (DnsSettings.HTTPStatusNotify)
+                    //    MainWindow.NotifyIcon.ShowBalloonTip(360, "AuroraDNS - 错误",
+                    //        $"异常 :{Convert.ToInt32(response.StatusCode)} {response.StatusCode} {Environment.NewLine} {domainName}", ToolTipIcon.Warning);
                     if (response.StatusCode == HttpStatusCode.BadRequest) DnsSettings.DnsMsgEnable = true;
                 }
                 catch (Exception exception)
                 {
                     BackgroundLog($@"| - Catch WebException : {exception.Message} | {e.Status} | {domainName} | {dohUrl}" + @"?ct=application/dns-json&" +
                                   $"name={domainName}&type={type.ToString().ToUpper()}&edns_client_subnet={clientIpAddress}");
-                    if (DnsSettings.HTTPStatusNotify)
-                        MainWindow.NotifyIcon.ShowBalloonTip(360, "AuroraDNS - 错误",
-                            $"异常 : {exception.Message} {Environment.NewLine} {domainName}", ToolTipIcon.Warning);
+                    //if (DnsSettings.HTTPStatusNotify)
+                    //    MainWindow.NotifyIcon.ShowBalloonTip(360, "AuroraDNS - 错误",
+                    //        $"异常 : {exception.Message} {Environment.NewLine} {domainName}", ToolTipIcon.Warning);
                 }
 
                 if (dohUrl != DnsSettings.HttpsDnsUrl) return (new List<DnsRecordBase>(), ReturnCode.ServerFailure);
